@@ -301,6 +301,14 @@ angular.module('ngDfp', [])
           googletag.cmd.push(function() {
             $window.googletag.pubads().refresh(slots);
           });
+        },
+        
+        setKeyword: function (keyword) {
+        
+            googletag.cmd.push(function () {                       
+                    $window.googletag.pubads().setTargeting("kw", keyword).display();                                
+            });
+
         }
       };
     }];
@@ -423,3 +431,4 @@ angular.module('ngDfp', [])
     };
   }]);
  
+
