@@ -379,10 +379,13 @@ angular.module('ngDfp', [])
             if (ngDfpAdContainer) {
               slot.setRenderCallback(function () {
                 if (angular.isDefined(attrs.ngDfpAdHideWhenEmpty)) {
-                  if (element.find('iframe:not([id*=hidden])')
-                             .map(function () { return this.contentWindow.document; })
+                    var iframe = element.find('iframe:not([id*=hidden])')
+                             .map(function () { return this.contentWindow.document; });
+                  if (iframe
                              .find("body")
-                             .children().length === 0) {
+                             .children().length === 0 || 
+                            iframe
+                             .find("img").attr("width") == 1) {
                     // Hide it
                     ngDfpAdContainer.$$setVisible(false, attrs.ngDfpAdHideWhenEmpty);
                   }
