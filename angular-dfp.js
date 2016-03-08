@@ -383,7 +383,7 @@ angular.module('ngDfp', [])
                              .map(function () { return this.contentWindow.document; });
                   if (iframe
                              .find("body")
-                             .children().length === 0 || 
+                             .children().length == 0 || 
                             iframe
                              .find("img").attr("width") == 1) {
                     // Hide it
