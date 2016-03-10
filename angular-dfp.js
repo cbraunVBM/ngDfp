@@ -11,6 +11,11 @@ angular.module('ngDfp', [])
      Holds slot configurations.
      */
     var slots = {};
+    
+    /**
+     Holds oopslot configurations.
+     */
+    var oopSlots = {};
 
     /**
      Defined Slots, so we can refresh the ads
@@ -81,7 +86,13 @@ angular.module('ngDfp', [])
       // when the GPT JavaScript is loaded, it looks through the array and executes all the functions in order
       googletag.cmd.push(function() {
         angular.forEach(slots, function (slot, id) {
-          definedSlots[id] = googletag.defineSlot.apply(null, slot).addService(googletag.pubads());
+          /* if (slot[2] == undefined){
+                  definedSlots[id] = googletag.defineOutOfPageSlot.apply(null, slot).addService(googletag.pubads()); 
+            }
+            else{
+                    definedSlots[id] = googletag.defineSlot.apply(null, slot).addService(googletag.pubads());      
+            }
+          
           if(sizeMapping[id]){
             definedSlots[id].defineSizeMapping(sizeMapping[id]);
           }
@@ -96,6 +107,11 @@ angular.module('ngDfp', [])
             });
           }
         });
+        
+        angular.forEach(oopSlots, function (slot, id) {
+          definedSlots[id] = googletag.defineOutOfPageSlot(slot[0],slot[2]).addService(googletag.pubads());                    
+        });
+
 
 	      /**
          Set the page targeting key->values
@@ -174,6 +190,42 @@ angular.module('ngDfp', [])
       };
 
       slots[arguments[2]] = slot;
+
+      // Chaining.
+      return this;
+    };
+    
+        /**
+     Stores a slot definition.
+     */
+    this.defineOutOfPageSlot = function () {
+      var slot = arguments;
+
+    slot.getSize = function () {
+            return false;
+        };
+
+        /**
+         To be able to get the array of slot targeting key/value
+        Example of the json format of the arguments: [{"id":"age","value":"20-30"}]
+        For multiple targeting key,values example: [{"id":"age","value":"20-30"},{"id":"gender","value":"male"}]
+        */
+        slot.getSlotTargeting = function() {
+            /**
+             The third parameter is optional
+            */
+            if (this[3]) {
+            return this[3];
+            } else {
+            return false;
+            }
+        };
+
+      slot.setRenderCallback = function (callback) {
+        this.renderCallback = callback;
+      };
+
+      slots[arguments[1]] = slot;
 
       // Chaining.
       return this;
@@ -271,11 +323,27 @@ angular.module('ngDfp', [])
 
             if (angular.isUndefined(slot)) {
               throw 'Slot ' + id + ' has not been defined. Define it using DoubleClickProvider.defineSlot().';
+            } else {
+              googletag.cmd.push(function () {
+                if (slot[2] == undefined) {
+                  definedSlots[id] = googletag.defineOutOfPageSlot.apply(null, slot).addService(googletag.pubads());
+                } else {
+                  definedSlots[id] = googletag.defineSlot.apply(null, slot).addService(googletag.pubads());
+                }
+                if (sizeMapping[id]) {
+                  definedSlots[id].defineSizeMapping(sizeMapping[id]);
+                }
+              });
             }
 
             return slots[id];
           });
         },
+        fireAd: function (id) {
+           googletag.cmd.push(function () {
+             self._initialize();
+           });
+         },
 
         runAd: function (id) {
           googletag.cmd.push(function() {
@@ -368,9 +436,12 @@ angular.module('ngDfp', [])
           var intervalPromise = null;
 
           DoubleClick.getSlot(id).then(function (slot) {
+            DoubleClick.fireAd(id);
             var size = slot.getSize();
-
-            element.css('width', size[0]).css('height', size[1]);
+            DoubleClick.refreshAds(id);
+            if (size) {
+              element.css('width', size[0]).css('height', size[1])
+            };            
             $timeout(function () {
               DoubleClick.runAd(id);
             });
@@ -428,6 +499,8 @@ angular.module('ngDfp', [])
                 DoubleClick.refreshAds(id);
               }, scope.timeout);
             });
+          },function(error){
+              console.log(error);
           });
         });
       }
