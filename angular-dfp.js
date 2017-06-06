@@ -13,11 +13,6 @@ angular.module('ngDfp', [])
     var slots = {};
     
     /**
-     Holds oopslot configurations.
-     */
-    var oopSlots = {};
-
-    /**
      Defined Slots, so we can refresh the ads
      */
     var definedSlots = {};
@@ -85,14 +80,17 @@ angular.module('ngDfp', [])
       var self = this;
       // when the GPT JavaScript is loaded, it looks through the array and executes all the functions in order
       googletag.cmd.push(function() {
+        
         angular.forEach(slots, function (slot, id) {
-          /* if (slot[2] == undefined){
-                  definedSlots[id] = googletag.defineOutOfPageSlot.apply(null, slot).addService(googletag.pubads()); 
-            }
-            else{
-                    definedSlots[id] = googletag.defineSlot.apply(null, slot).addService(googletag.pubads());      
-            }
-          
+          //Nur wenn noch nicht definiert
+          if(definedSlots[id] == undefined){         
+              if (slot[2] == undefined){
+                      definedSlots[id] = googletag.defineOutOfPageSlot.apply(null, slot);
+              }
+              else{
+                      definedSlots[id] = googletag.defineSlot.apply(null, slot);      
+              }
+          }
           if(sizeMapping[id]){
             definedSlots[id].defineSizeMapping(sizeMapping[id]);
           }
@@ -100,7 +98,7 @@ angular.module('ngDfp', [])
           /**
            If sent, set the slot specific targeting
            */
-	  var slotTargeting = slot.getSlotTargeting();
+	      var slotTargeting = slot.getSlotTargeting();
           if(slotTargeting){
             angular.forEach(slotTargeting, function (value, key) {
               definedSlots[id].setTargeting(value.id, value.value);
@@ -108,10 +106,6 @@ angular.module('ngDfp', [])
           }
         });
         
-        angular.forEach(oopSlots, function (slot, id) {
-          definedSlots[id] = googletag.defineOutOfPageSlot(slot[0],slot[2]).addService(googletag.pubads());                    
-        });
-
 
 	      /**
          Set the page targeting key->values
@@ -131,6 +125,11 @@ angular.module('ngDfp', [])
         googletag.enableServices();
 
         googletag.pubads().addEventListener('slotRenderEnded', self._slotRenderEnded);
+
+        angular.forEach(definedSlots,function(slot){
+          
+          slot.addService(googletag.pubads());
+        })
       });
     };
 
@@ -323,18 +322,7 @@ angular.module('ngDfp', [])
 
             if (angular.isUndefined(slot)) {
               throw 'Slot ' + id + ' has not been defined. Define it using DoubleClickProvider.defineSlot().';
-            } else {
-              googletag.cmd.push(function () {
-                if (slot[2] == undefined) {
-                  definedSlots[id] = googletag.defineOutOfPageSlot.apply(null, slot).addService(googletag.pubads());
-                } else {
-                  definedSlots[id] = googletag.defineSlot.apply(null, slot).addService(googletag.pubads());
-                }
-                if (sizeMapping[id]) {
-                  definedSlots[id].defineSizeMapping(sizeMapping[id]);
-                }
-              });
-            }
+            } 
 
             return slots[id];
           });
@@ -374,7 +362,7 @@ angular.module('ngDfp', [])
         setKeyword: function (keyword) {
         
             googletag.cmd.push(function () {                       
-                    $window.googletag.pubads().setTargeting("kw", keyword).display();                                
+                    $window.googletag.pubads().setTargeting("kw", keyword);                                
             });
 
         }
